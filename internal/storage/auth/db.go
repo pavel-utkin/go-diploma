@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 )
 
 type AuthStorage struct {
-	*sql.DB
+	db *sql.DB
 }
 
 func NewAuthStorage(db *sql.DB) (*AuthStorage, error) {
@@ -22,7 +23,8 @@ func NewAuthStorage(db *sql.DB) (*AuthStorage, error) {
 }
 
 func (s *AuthStorage) CreateUser(u srv.UserToCreate) (srv.User, error) {
-	row := s.QueryRow(`
+	ctx := context.Background()
+	row := s.db.QueryRowContext(ctx, `
 		insert into USERS (USERS_LOGIN, USERS_PASSWORD_HASH) 
 		values($1, $2) 
 		returning USERS_ID, USERS_LOGIN, USERS_PASSWORD_HASH
@@ -43,7 +45,8 @@ func (s *AuthStorage) CreateUser(u srv.UserToCreate) (srv.User, error) {
 }
 
 func (s *AuthStorage) GetUserByLogin(login string) (*srv.User, error) {
-	row := s.QueryRow(`
+	ctx := context.Background()
+	row := s.db.QueryRowContext(ctx, `
 		select USERS_ID, USERS_LOGIN, USERS_PASSWORD_HASH
 		from USERS
 		where USERS_LOGIN = $1
@@ -51,7 +54,7 @@ func (s *AuthStorage) GetUserByLogin(login string) (*srv.User, error) {
 	user := srv.User{}
 
 	err := row.Scan(&user.ID, &user.Login, &user.PasswordHash)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, srv.ErrUserNotFound
 	}
 	if err != nil {
@@ -62,7 +65,8 @@ func (s *AuthStorage) GetUserByLogin(login string) (*srv.User, error) {
 }
 
 func (s *AuthStorage) SetUserSession(us srv.UserSessionToStart) (srv.UserSession, error) {
-	row := s.QueryRow(`
+	ctx := context.Background()
+	row := s.db.QueryRowContext(ctx, `
 		insert into USER_SESSIONS (USERS_ID, USER_SESSIONS_SIG_KEY) 
 		values($1, $2) 
 		on conflict (USERS_ID) do update set USER_SESSIONS_SIG_KEY = $2
@@ -78,7 +82,8 @@ func (s *AuthStorage) SetUserSession(us srv.UserSessionToStart) (srv.UserSession
 }
 
 func (s *AuthStorage) GetUserSession(uID int64) (srv.UserSession, error) {
-	row := s.QueryRow(`
+	ctx := context.Background()
+	row := s.db.QueryRowContext(ctx, `
 		select USERS_ID, USER_SESSIONS_SIG_KEY, USER_SESSIONS_STARTED_AT
 		from USER_SESSIONS 
 		where USERS_ID = $1  
