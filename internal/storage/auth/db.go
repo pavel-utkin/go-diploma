@@ -22,8 +22,7 @@ func NewAuthStorage(db *sql.DB) (*AuthStorage, error) {
 	return &AuthStorage{db}, nil
 }
 
-func (s *AuthStorage) CreateUser(u srv.UserToCreate) (srv.User, error) {
-	ctx := context.Background()
+func (s *AuthStorage) CreateUser(u srv.UserToCreate, ctx context.Context) (srv.User, error) {
 	row := s.db.QueryRowContext(ctx, `
 		insert into USERS (USERS_LOGIN, USERS_PASSWORD_HASH) 
 		values($1, $2) 
@@ -44,8 +43,7 @@ func (s *AuthStorage) CreateUser(u srv.UserToCreate) (srv.User, error) {
 	return user, nil
 }
 
-func (s *AuthStorage) GetUserByLogin(login string) (*srv.User, error) {
-	ctx := context.Background()
+func (s *AuthStorage) GetUserByLogin(login string, ctx context.Context) (*srv.User, error) {
 	row := s.db.QueryRowContext(ctx, `
 		select USERS_ID, USERS_LOGIN, USERS_PASSWORD_HASH
 		from USERS
@@ -64,8 +62,7 @@ func (s *AuthStorage) GetUserByLogin(login string) (*srv.User, error) {
 	return &user, nil
 }
 
-func (s *AuthStorage) SetUserSession(us srv.UserSessionToStart) (srv.UserSession, error) {
-	ctx := context.Background()
+func (s *AuthStorage) SetUserSession(us srv.UserSessionToStart, ctx context.Context) (srv.UserSession, error) {
 	row := s.db.QueryRowContext(ctx, `
 		insert into USER_SESSIONS (USERS_ID, USER_SESSIONS_SIG_KEY) 
 		values($1, $2) 
@@ -81,8 +78,7 @@ func (s *AuthStorage) SetUserSession(us srv.UserSessionToStart) (srv.UserSession
 	return sess, nil
 }
 
-func (s *AuthStorage) GetUserSession(uID int64) (srv.UserSession, error) {
-	ctx := context.Background()
+func (s *AuthStorage) GetUserSession(uID int64, ctx context.Context) (srv.UserSession, error) {
 	row := s.db.QueryRowContext(ctx, `
 		select USERS_ID, USER_SESSIONS_SIG_KEY, USER_SESSIONS_STARTED_AT
 		from USER_SESSIONS 
