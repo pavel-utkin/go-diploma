@@ -16,15 +16,16 @@ type OrderAccrual struct {
 	Accrual int64
 }
 
-type errTooManyRequests struct {
+type ErrTooManyRequests struct {
 	RetryAfter time.Duration
 	Err        error
 }
 
-func (e *errTooManyRequests) Error() error {
-	return fmt.Errorf("too many requests; retry after %v sec: %w", e.RetryAfter.Seconds(), e.Err)
+func (e *ErrTooManyRequests) Error() string {
+	wrapped := fmt.Errorf("too many requests; retry after %v sec: %w", e.RetryAfter.Seconds(), e.Err)
+	return wrapped.Error()
 }
 
-func (e *errTooManyRequests) Unwrap() error {
+func (e *ErrTooManyRequests) Unwrap() error {
 	return e.Err
 }
