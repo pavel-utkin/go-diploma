@@ -10,7 +10,9 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go-diploma/internal/api"
 	"go-diploma/internal/config"
-	"go-diploma/internal/storage/auth"
+	accrual "go-diploma/internal/storage/accrual/db"
+	auth "go-diploma/internal/storage/auth"
+	order "go-diploma/internal/storage/order/db"
 	"log"
 	"os"
 	"os/signal"
@@ -27,7 +29,7 @@ func main() {
 	log.Printf("Starting with config %#v", conf)
 
 	if errMigrate := migrateDB(conf.DatabaseURI); errMigrate != nil {
-		log.Println("Cannot migrate DB: ", errMigrate.Error())
+		log.Fatalf("Cannot migrate DB: %s", errMigrate.Error())
 	}
 
 	db, errDB := newDataSource(conf.DatabaseURI)
@@ -40,15 +42,26 @@ func main() {
 		log.Fatalf("Cannot instantiate auth storage: %s", errAuthStorage.Error())
 	}
 
+	orderStorage, errOrderStorage := order.NewOrderStorage(db)
+	if errOrderStorage != nil {
+		log.Fatalf("Cannot instantiate order storage: %s", errOrderStorage.Error())
+	}
+
+	accrualStorage, errAccrualStorage := accrual.NewAccrualStorage(db)
+	if errAccrualStorage != nil {
+		log.Fatalf("Cannot instantiate accrual storage: %s", errAccrualStorage.Error())
+	}
+
 	server, errServer := api.NewServer(
 		conf.RunAddress,
 		conf.AccrualSystemAddress,
 		authStorage,
+		orderStorage,
+		accrualStorage,
 	)
 	if errServer != nil {
 		log.Fatalf("Cannot start HTTP server: %s", errServer.Error())
 	}
-	log.Println(server)
 
 	awaitTermination()
 
