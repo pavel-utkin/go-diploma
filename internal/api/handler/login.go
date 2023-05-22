@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"go-diploma/internal/service/auth"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (h *LoyaltyHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -18,14 +20,16 @@ func (h *LoyaltyHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cred := models.CredentialsJSON{}
-	
+
 	if errDec := json.NewDecoder(r.Body).Decode(&cred); errDec != nil {
 		msg := fmt.Sprintf("Cannot parse credentials: %s", errDec.Error())
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 
-	u, errLogin := h.AuthSrv.Login(cred.ToCredentials())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	u, errLogin := h.AuthSrv.Login(cred.ToCredentials(), ctx)
 	if errors.Is(errLogin, auth.ErrWrongCredentials) {
 		http.Error(w, "Incorrect login/password", http.StatusUnauthorized)
 		return

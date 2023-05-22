@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"crypto/hmac"
 	"errors"
 	"fmt"
@@ -23,7 +24,7 @@ func NewService(storage authStorage.Storage) (*Service, error) {
 	return &Service{storage}, nil
 }
 
-func (s *Service) Register(cred auth.Credentials) error {
+func (s *Service) Register(cred auth.Credentials, ctx context.Context) error {
 	hash, errHash := bcrypt.GenerateFromPassword(cred.Password, bcryptCost)
 	if errHash != nil {
 		return fmt.Errorf("cannot hash password: %w", errHash)
@@ -34,17 +35,17 @@ func (s *Service) Register(cred auth.Credentials) error {
 		PasswordHash: hash,
 	}
 
-	if _, errCreate := s.storage.CreateUser(u); errCreate != nil {
+	if _, errCreate := s.storage.CreateUser(u, ctx); errCreate != nil {
 		return fmt.Errorf("cannot create user [%s]: %w", cred.Login, errCreate)
 	}
 
 	return nil
 }
 
-func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
+func (s *Service) Login(cred auth.Credentials, ctx context.Context) (auth.SignedUserID, error) {
 	nilLogin := auth.SignedUserID{}
 
-	u, errGet := s.storage.GetUserByLogin(cred.Login)
+	u, errGet := s.storage.GetUserByLogin(cred.Login, ctx)
 	if errGet != nil {
 		return nilLogin, fmt.Errorf("cannot get user by sess [%s]: %w", cred.Login, errGet)
 	}
@@ -66,7 +67,7 @@ func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
 		SignatureKey: sigKey,
 	}
 
-	sess, errSet := s.storage.SetUserSession(sessToStart)
+	sess, errSet := s.storage.SetUserSession(sessToStart, ctx)
 	if errSet != nil {
 		return nilLogin, fmt.Errorf("cannot create session for user [%d]: %w", u.ID, errSet)
 	}
@@ -76,8 +77,8 @@ func (s *Service) Login(cred auth.Credentials) (auth.SignedUserID, error) {
 	return signedUserID, nil
 }
 
-func (s *Service) Validate(sgn auth.SignedUserID) error {
-	sess, errGet := s.storage.GetUserSession(sgn.ID)
+func (s *Service) Validate(sgn auth.SignedUserID, ctx context.Context) error {
+	sess, errGet := s.storage.GetUserSession(sgn.ID, ctx)
 	if errGet != nil {
 		return fmt.Errorf("cannot get user session: %w", errGet)
 	}

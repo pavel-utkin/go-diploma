@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (h *LoyaltyHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -28,8 +30,9 @@ func (h *LoyaltyHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println(cred)
-
-	errReg := h.AuthSrv.Register(cred.ToCredentials())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	errReg := h.AuthSrv.Register(cred.ToCredentials(), ctx)
 	if errors.Is(errReg, auth.ErrLoginAlreadyTaken) {
 		http.Error(w, "Login already taken", http.StatusConflict)
 		return
