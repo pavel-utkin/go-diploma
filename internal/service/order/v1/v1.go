@@ -21,11 +21,11 @@ func NewService(storage storage.Storage) (*Service, error) {
 	return &Service{storage}, nil
 }
 
-func (s *Service) UploadOrder(pr srv.ProcessRequest, ctx context.Context) error {
+func (s *Service) UploadOrder(ctx context.Context, pr srv.ProcessRequest) error {
 
-	if errAdd := s.storage.AddOrder(pr, ctx); errAdd != nil {
+	if errAdd := s.storage.AddOrder(ctx, pr); errAdd != nil {
 		if errors.Is(errAdd, srv.ErrDuplicateOrder) {
-			dupO, errGet := s.storage.GetOrderByNr(pr.Nr, ctx)
+			dupO, errGet := s.storage.GetOrderByNr(ctx, pr.Nr)
 			if errGet != nil {
 				return fmt.Errorf("cannot get details of a duplicate order: %w", errGet)
 			}
@@ -43,8 +43,8 @@ func (s *Service) UploadOrder(pr srv.ProcessRequest, ctx context.Context) error 
 	return nil
 }
 
-func (s *Service) ListUserOrders(userID int64, ctx context.Context) ([]srv.Order, error) {
-	orders, err := s.storage.ListUserOrders(userID, ctx)
+func (s *Service) ListUserOrders(ctx context.Context, userID int64) ([]srv.Order, error) {
+	orders, err := s.storage.ListUserOrders(ctx, userID)
 	if err != nil {
 		return orders, fmt.Errorf("cannot list orders for user [%d]: %w", userID, err)
 	}
@@ -52,10 +52,10 @@ func (s *Service) ListUserOrders(userID int64, ctx context.Context) ([]srv.Order
 	return orders, nil
 }
 
-func (s *Service) GetUserBalance(userID int64, ctx context.Context) (srv.Balance, error) {
+func (s *Service) GetUserBalance(ctx context.Context, userID int64) (srv.Balance, error) {
 	balance := srv.NewBalance()
 
-	accruals, errAccruals := s.storage.ListUserOrders(userID, ctx)
+	accruals, errAccruals := s.storage.ListUserOrders(ctx, userID)
 	if errAccruals != nil {
 		return balance, fmt.Errorf("cannot list accruals for user [%d]: %w", userID, errAccruals)
 	}
@@ -67,7 +67,7 @@ func (s *Service) GetUserBalance(userID int64, ctx context.Context) (srv.Balance
 		}
 	}
 
-	withdrawals, errWithdrawals := s.storage.ListUserWithdrawals(userID, ctx)
+	withdrawals, errWithdrawals := s.storage.ListUserWithdrawals(ctx, userID)
 	if errWithdrawals != nil {
 		return balance, fmt.Errorf("cannot list withdrawals for user [%d]: %w", userID, errAccruals)
 	}
@@ -81,8 +81,8 @@ func (s *Service) GetUserBalance(userID int64, ctx context.Context) (srv.Balance
 	return balance, nil
 }
 
-func (s *Service) Withdraw(wr srv.WithdrawalRequest, ctx context.Context) error {
-	bal, errBal := s.GetUserBalance(wr.UserID, ctx)
+func (s *Service) Withdraw(ctx context.Context, wr srv.WithdrawalRequest) error {
+	bal, errBal := s.GetUserBalance(ctx, wr.UserID)
 	if errBal != nil {
 		return fmt.Errorf("cannot get user balance [%v]: %w", wr, errBal)
 	}
@@ -94,15 +94,15 @@ func (s *Service) Withdraw(wr srv.WithdrawalRequest, ctx context.Context) error 
 	wr.LatestAccrual = bal.LatestAccrual
 	wr.LatestWithdrawal = bal.LatestWithdrawal
 
-	if err := s.storage.Withdraw(wr, ctx); err != nil {
+	if err := s.storage.Withdraw(ctx, wr); err != nil {
 		return fmt.Errorf("cannot withdraw [%v]: %w", wr, err)
 	}
 
 	return nil
 }
 
-func (s *Service) ListUserWithdrawals(userID int64, ctx context.Context) ([]srv.Withdrawal, error) {
-	withdrawals, err := s.storage.ListUserWithdrawals(userID, ctx)
+func (s *Service) ListUserWithdrawals(ctx context.Context, userID int64) ([]srv.Withdrawal, error) {
+	withdrawals, err := s.storage.ListUserWithdrawals(ctx, userID)
 	if err != nil {
 		return withdrawals, fmt.Errorf("cannot list withdrawals for user [%d]: %w", userID, err)
 	}

@@ -20,7 +20,7 @@ func (h *LoyaltyHandler) Balance(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	balance, errBalance := h.OrderSrv.GetUserBalance(uID, ctx)
+	balance, errBalance := h.OrderSrv.GetUserBalance(ctx, uID)
 	if errBalance != nil {
 		log.Printf("Cannot get balance for user [%d]: %s", uID, errBalance.Error())
 		http.Error(w, "Cannot get balance for user", http.StatusInternalServerError)

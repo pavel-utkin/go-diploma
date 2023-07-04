@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go-diploma/internal/api/handler"
 	accrualClient "go-diploma/internal/client/accrual"
@@ -40,7 +41,7 @@ func NewServer(
 	ctx := context.Background()
 
 	acrClient := accrualClient.NewClient(accrualAddr)
-	acrSrv, errAcr := accrual.NewService(acrClient, accrualStorage, ctx)
+	acrSrv, errAcr := accrual.NewService(ctx, acrClient, accrualStorage)
 	if errAcr != nil {
 		return nil, fmt.Errorf("cannot get instance of Accrual Service: %s", errAcr)
 	}
@@ -63,7 +64,7 @@ func NewServer(
 
 	go func() {
 		err := server.ListenAndServe()
-		if err != http.ErrServerClosed {
+		if errors.Is(err, http.ErrServerClosed) {
 			log.Printf("Server failed: %s", err.Error())
 		}
 	}()

@@ -26,7 +26,7 @@ func NewOrderStorage(db *sql.DB) (*OrderStorage, error) {
 	return &OrderStorage{db}, nil
 }
 
-func (s *OrderStorage) AddOrder(pr srv.ProcessRequest, ctx context.Context) error {
+func (s *OrderStorage) AddOrder(ctx context.Context, pr srv.ProcessRequest) error {
 	row := s.QueryRowContext(ctx, `
 		insert into ORDERS (ORDERS_NR, USERS_ID, ORDERS_STATUS) 
 		values($1, $2, $3) 
@@ -48,7 +48,7 @@ func (s *OrderStorage) AddOrder(pr srv.ProcessRequest, ctx context.Context) erro
 	return nil
 }
 
-func (s *OrderStorage) GetOrderByNr(nr int64, ctx context.Context) (srv.Order, error) {
+func (s *OrderStorage) GetOrderByNr(ctx context.Context, nr int64) (srv.Order, error) {
 	row := s.QueryRowContext(ctx, `
 		select ORDERS_NR, USERS_ID, ORDERS_STATUS, ORDERS_ACCRUAL, ORDERS_UPLOADED_AT
 		from ORDERS
@@ -63,7 +63,7 @@ func (s *OrderStorage) GetOrderByNr(nr int64, ctx context.Context) (srv.Order, e
 	return order, nil
 }
 
-func (s *OrderStorage) ListUserWithdrawals(userID int64, ctx context.Context) ([]srv.Withdrawal, error) {
+func (s *OrderStorage) ListUserWithdrawals(ctx context.Context, userID int64) ([]srv.Withdrawal, error) {
 	result := make([]srv.Withdrawal, 0)
 
 	rows, err := s.QueryContext(ctx, `
@@ -98,7 +98,7 @@ func (s *OrderStorage) ListUserWithdrawals(userID int64, ctx context.Context) ([
 
 }
 
-func (s *OrderStorage) ListUserOrders(userID int64, ctx context.Context) ([]srv.Order, error) {
+func (s *OrderStorage) ListUserOrders(ctx context.Context, userID int64) ([]srv.Order, error) {
 	result := make([]srv.Order, 0)
 
 	rows, err := s.QueryContext(ctx, `
@@ -133,7 +133,7 @@ func (s *OrderStorage) ListUserOrders(userID int64, ctx context.Context) ([]srv.
 	return result, nil
 }
 
-func (s *OrderStorage) Withdraw(wr srv.WithdrawalRequest, ctx context.Context) error {
+func (s *OrderStorage) Withdraw(ctx context.Context, wr srv.WithdrawalRequest) error {
 	log.Printf("Processing withdrawal request: %v", wr)
 	result, errExec := s.ExecContext(ctx, `
 			with NEW_WITHDRAWAL as (

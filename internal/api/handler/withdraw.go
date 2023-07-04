@@ -43,7 +43,7 @@ func (h *LoyaltyHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errWithdraw := h.OrderSrv.Withdraw(wr, ctx)
+	errWithdraw := h.OrderSrv.Withdraw(ctx, wr)
 	if errors.Is(errWithdraw, order.ErrInsufficientBalance) {
 		http.Error(w, "Insufficient balance", http.StatusPaymentRequired)
 		return

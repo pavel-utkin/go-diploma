@@ -3,9 +3,9 @@ package order
 import "context"
 
 type Service interface {
-	UploadOrder(pr ProcessRequest, ctx context.Context) error
-	ListUserOrders(userID int64, ctx context.Context) ([]Order, error)
-	GetUserBalance(userID int64, ctx context.Context) (Balance, error)
-	Withdraw(wr WithdrawalRequest, ctx context.Context) error
-	ListUserWithdrawals(userID int64, ctx context.Context) ([]Withdrawal, error)
+	UploadOrder(ctx context.Context, pr ProcessRequest) error
+	ListUserOrders(ctx context.Context, userID int64) ([]Order, error)
+	GetUserBalance(ctx context.Context, userID int64) (Balance, error)
+	Withdraw(ctx context.Context, wr WithdrawalRequest) error
+	ListUserWithdrawals(ctx context.Context, userID int64) ([]Withdrawal, error)
 }

@@ -42,7 +42,7 @@ func (h *LoyaltyHandler) PostOrder(w http.ResponseWriter, r *http.Request) {
 		UserID: uID,
 	}
 
-	errProcess := h.OrderSrv.UploadOrder(o, ctx)
+	errProcess := h.OrderSrv.UploadOrder(ctx, o)
 	if errors.Is(errProcess, order.ErrDuplicateOrderForUser) {
 		w.WriteHeader(http.StatusOK)
 		return

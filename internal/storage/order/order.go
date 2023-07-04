@@ -6,9 +6,9 @@ import (
 )
 
 type Storage interface {
-	AddOrder(pr order.ProcessRequest, ctx context.Context) error
-	GetOrderByNr(nr int64, ctx context.Context) (order.Order, error)
-	ListUserOrders(userID int64, ctx context.Context) ([]order.Order, error)
-	Withdraw(wr order.WithdrawalRequest, ctx context.Context) error
-	ListUserWithdrawals(userID int64, ctx context.Context) ([]order.Withdrawal, error)
+	AddOrder(ctx context.Context, pr order.ProcessRequest) error
+	GetOrderByNr(ctx context.Context, nr int64) (order.Order, error)
+	ListUserOrders(ctx context.Context, userID int64) ([]order.Order, error)
+	Withdraw(ctx context.Context, wr order.WithdrawalRequest) error
+	ListUserWithdrawals(ctx context.Context, userID int64) ([]order.Withdrawal, error)
 }

@@ -20,7 +20,7 @@ func (h *LoyaltyHandler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	orders, errList := h.OrderSrv.ListUserOrders(uID, ctx)
+	orders, errList := h.OrderSrv.ListUserOrders(ctx, uID)
 	if errList != nil {
 		log.Printf("Cannot list orders for user [%d], %s", uID, errList.Error())
 		http.Error(w, "Cannot list orders for user", http.StatusInternalServerError)

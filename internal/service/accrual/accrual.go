@@ -23,7 +23,7 @@ type Service struct {
 	stopChan   chan struct{}
 }
 
-func NewService(client *client.Client, storage storage.Storage, ctx context.Context) (*Service, error) {
+func NewService(ctx context.Context, client *client.Client, storage storage.Storage) (*Service, error) {
 	if storage == nil {
 		return nil, errors.New("storage required")
 	}

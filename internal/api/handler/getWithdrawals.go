@@ -20,7 +20,7 @@ func (h *LoyaltyHandler) GetWithdrawals(w http.ResponseWriter, r *http.Request) 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	withdrawals, errList := h.OrderSrv.ListUserWithdrawals(uID, ctx)
+	withdrawals, errList := h.OrderSrv.ListUserWithdrawals(ctx, uID)
 	if errList != nil {
 		log.Printf("Cannot list withdrawals for user [%d], %s", uID, errList.Error())
 		http.Error(w, "Cannot list withdrawals for user", http.StatusInternalServerError)
